@@ -1,0 +1,38 @@
+.page {
+  padding: 20px;
+  background-color: #f1f1f1;
+}
+
+.section-container {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.zaui-list-item {
+  cursor: pointer;
+}
+
+// @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap");
+
+// body {
+//     font-family: "Open Sans", sans-serif;
+// }
+
+// @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+// body {
+//     font-family: "Poppins", sans-serif;
+// }
+
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
+
+body {
+  font-family: "Quicksand", sans-serif;
+}
+
+/* Ẩn scrollbar */
+::-webkit-scrollbar {
+  display: none;
+}

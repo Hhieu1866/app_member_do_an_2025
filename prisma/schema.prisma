@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  zaloId    String   @unique
+  name      String
+  email     String?
+  phone     String?
+  role      String   // "LEARNER", "MENTOR", "ADMIN"
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  learningPaths LearningPath[]
+  progress      Progress[]
+  courses       Course[]     @relation("MentorCourses")
+  mentorRatings MentorRating[]
+}
+
+model Course {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  mentorId    String   @db.ObjectId
+  mentor      User     @relation("MentorCourses", fields: [mentorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+  assessments Assessment[]
+  progress    Progress[]
+  learningPathCourses LearningPathCourse[]
+}
+
+type Lesson {
+  lessonId  String  @db.ObjectId
+  title     String
+  content   String
+  type      String  // "VIDEO", "TEXT", "INTERACTIVE"
+  duration  Int
+  order     Int
+}
+
+type Assessment {
+  assessmentId String   @db.ObjectId
+  title        String
+  type         String   // "QUIZ", "ASSIGNMENT"
+  questions    Json[]
+  duration     Int
+}
+
+model LearningPath {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  description String
+  progress    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses    LearningPathCourse[]
+  milestones Milestone[]
+}
+
+model LearningPathCourse {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  learningPathId String       @db.ObjectId
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id])
+  courseId       String       @db.ObjectId
+  course         Course       @relation(fields: [courseId], references: [id])
+  order          Int
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String       // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+
+  @@unique([learningPathId, courseId])
+}
+
+model Milestone {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  learningPathId String       @db.ObjectId
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id])
+  title          String
+  description    String
+  date           DateTime
+  isCompleted    Boolean      @default(false)
+}
+
+model Progress {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id])
+  courseId       String   @db.ObjectId
+  course         Course   @relation(fields: [courseId], references: [id])
+  lastAccessedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  lessonProgress    LessonProgress[]
+  assessmentResults AssessmentResult[]
+
+  @@unique([userId, courseId])
+}
+
+type LessonProgress {
+  lessonId    String    @db.ObjectId
+  status      String    // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+  completedAt DateTime?
+}
+
+type AssessmentResult {
+  assessmentId String
+  score        Float
+  submittedAt  DateTime
+  feedback     String?
+}
+
+model MentorRating {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  mentorId  String   @db.ObjectId
+  mentor    User     @relation(fields: [mentorId], references: [id])
+  learnerId String   @db.ObjectId
+  rating    Float
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([mentorId, learnerId])
+}
