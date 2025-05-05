@@ -1,18 +1,112 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import SearchComponent from "../components/SearchComponent";
-import { courseData } from "../assets/asset";
 import { Box, Page } from "zmp-ui";
 import UserCard from "../components/user-card";
 import { Icon } from "zmp-ui";
-import { Link, NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import KhoaHoc1 from "../assets/img/khoa_1.png";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import BottomNav from "../components/BottomNav";
 import TopMentor from "../components/TopMentor";
+import SkeletonLoader from "../components/ui/SkeletonLoader";
+import { fetchCourses } from "../utils/apiUtils";
+
 const MainPage = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
+  const [error, setError] = useState(null);
+
+  // Lấy danh sách khóa học khi component được mount
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true);
+        const coursesData = await fetchCourses(10);
+        setCourses(coursesData);
+        console.log("Dữ liệu khóa học đã xử lý:", coursesData);
+      } catch (err) {
+        console.error("Lỗi khi tải khóa học:", err);
+        setError("Không thể tải danh sách khóa học");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
+
   const handleSearch = (query) => {
     console.log("Searching for:", query);
+  };
+
+  // Render phần danh sách khóa học
+  const renderCourseList = () => {
+    if (isLoading) {
+      return <SkeletonLoader type="course" count={3} />;
+    }
+
+    if (error) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <p className="text-red-500">{error}</p>
+        </div>
+      );
+    }
+
+    if (!courses || courses.length === 0) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <p className="text-gray-500">Không có khóa học nào</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex gap-4 overflow-x-auto snap-x">
+        {courses.map((course) => (
+          <Link to={`/learning-path/${course.id}`} key={course.id}>
+            <div className="bg-white min-w-[300px] flex-shrink-0 rounded-3xl snap-start border border-gray-300">
+              <div className="rounded-t-3xl overflow-hidden">
+                {course.thumbnail && (
+                  <img
+                    src={course.thumbnail}
+                    alt={course.title}
+                    className="w-full h-44 object-cover transition-transform duration-300 ease-in-out hover:scale-105"
+                  />
+                )}
+                {!course.thumbnail && course.thumbnailUrl && (
+                  <img
+                    src={course.thumbnailUrl}
+                    alt={course.title}
+                    className="w-full h-44 object-cover transition-transform duration-300 ease-in-out hover:scale-105"
+                  />
+                )}
+                {!course.thumbnail && !course.thumbnailUrl && (
+                  <div className="w-full h-44 bg-gray-200 flex items-center justify-center">
+                    <p className="text-gray-500 text-sm">Không có ảnh</p>
+                  </div>
+                )}
+              </div>
+              <div className="p-4 flex flex-col gap-2">
+                <p className="font-bold text-lg">{course.title}</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-500 font-medium">
+                    by {course.instructor?.firstName || ""}{" "}
+                    {course.instructor?.lastName || ""}
+                  </p>
+                  <p className="text-primary font-bold">
+                    {course.price > 0
+                      ? `${course.price.toLocaleString()} VND`
+                      : "Miễn phí"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -20,7 +114,7 @@ const MainPage = () => {
       <div className="bg-primary p-5 rounded-b-[30px] py-10 shadow-custom">
         <Box flex justifyContent="space-between" alignItems="center" mt={2}>
           <div className="text-white">
-            <Suspense>
+            <Suspense fallback={<SkeletonLoader type="profile" />}>
               <UserCard />
             </Suspense>
           </div>
@@ -43,7 +137,9 @@ const MainPage = () => {
             <p className="text-primary text-lg font-bold">See all</p>
           </Box>
           <div className="flex gap-4 mt-3">
-            <TopMentor />
+            <Suspense fallback={<SkeletonLoader type="list" count={5} />}>
+              <TopMentor />
+            </Suspense>
           </div>
         </div>
 
@@ -53,34 +149,7 @@ const MainPage = () => {
             <p className="font-bold text-primary">Xem tất cả</p>
           </Box>
 
-          <Box mt={3}>
-            <div className="flex gap-4 overflow-x-auto snap-x">
-              {courseData.map((course) => (
-                <Link to={`/learning-path/${course.id}`} key={course.id}>
-                  <div className="bg-white min-w-[300px] flex-shrink-0 rounded-3xl snap-start border border-gray-300">
-                    <div className="rounded-t-3xl overflow-hidden">
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="w-full h-44 object-cover transition-transform duration-300 ease-in-out hover:scale-105"
-                      />
-                    </div>
-                    <div className="p-4 flex flex-col gap-2">
-                      <p className="font-bold text-lg">{course.title}</p>
-                      <div className="flex justify-between items-center">
-                        <p className="text-gray-500 font-medium">
-                          by {course.mentor}
-                        </p>
-                        <p className="text-primary font-bold">
-                          {course.price}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </Box>
+          <Box mt={3}>{renderCourseList()}</Box>
         </Box>
 
         <div className="mt-10 mb-32">

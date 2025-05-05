@@ -16,6 +16,8 @@ import Setting from "../pages/Setting";
 import LearningPath from "../pages/learning/LearningPath";
 import LearningPathDetail from "../pages/learning/LearningPathDetail";
 import LessonContent from "../pages/learning/LessonContent";
+import MentorDetail from "../pages/mentor/MentorDetail";
+
 const MyApp = () => {
   return (
     <RecoilRoot>
@@ -45,6 +47,7 @@ const MyApp = () => {
                 path="/learning-path/:id/lessons/:lessonId"
                 element={<LessonContent />}
               />
+              <Route path="/mentor/:mentorId" element={<MentorDetail />} />
             </AnimationRoutes>
             {/* <BottomNav /> */}
           </ZMPRouter>
